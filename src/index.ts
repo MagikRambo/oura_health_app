@@ -33,7 +33,7 @@ app.get('/login', (req, res) => {
   const url = new URL(AUTHORIZATION_ENDPOINT);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('client_id', CLIENT_ID!);
-  // url.searchParams.set('redirect_uri', REDIRECT_URI);   // must match portal value exactly
+  url.searchParams.set('redirect_uri', REDIRECT_URI);   // must match portal value exactly
   url.searchParams.set('scope', SCOPE);                 // start with: "email personal"
   url.searchParams.set('state', state);
 
@@ -60,7 +60,7 @@ app.get('/callback', async (req, res, next) => {
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      // redirect_uri: REDIRECT_URI,
+      redirect_uri: REDIRECT_URI,
     });
 
     const tokenResp = await fetch(TOKEN_ENDPOINT, {
@@ -100,7 +100,7 @@ app.get('/callback', async (req, res, next) => {
   }
 });
 
-app.use((err: any, _req, res, _next) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
   res.status(500).send(err?.message || 'Internal error');
 });
