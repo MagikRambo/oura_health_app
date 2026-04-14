@@ -1,0 +1,70 @@
+# Spins up the mike-dev-aks cluster
+
+name: Spin up
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v3
+
+        - name: Terraform Init
+          working-directory: terraform
+          run: terraform init
+
+        - name: Terraform Apply
+          working-directory: terraform
+          run: terraform apply -auto-approve
+
+  deploy:
+    name: Deploy to AKS
+    runs-on: ubuntu-latest
+    needs: terraform # waits for the cluster to exist
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: >
+            {
+              "clienId": "${{ secrets.AZURE_CLIENT_ID }}"
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}"
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
+
+      - name: get AKS Credentials
+        run: az aks get-credentials --resource-group mike-dev-rg --name mike-dev-aks
+
+      - name: Push Image to ACR
+        run: |
+          az acr login --name magikrambo --resource-group mike-dev-rg
+          docker build -t magikrambo.azurecr.io/oura-health-app:latest
+          docker push magikrambo.azurecr.io/oura-health-app:latest
+
+      - name: Create Kubernetes Secret
+        run: |
+          kubectl create secret generic oura-secrets \
+             --from-literal=OURA_CLIENT_ID=${{ secrets.OURA_CLIENT_ID }} \
+             --from-literal=OURA_CLIENT_SECRET=${{ secrets.OURA_CLIENT_SECRET }} \
+             --from-literal=OURA_REDIRECT_URI=${{ secrets.OURA_REDIRECT_URI }} \
+             --from-literal=OURA_SCOPE=${{ secrets.OURA_SCOPE }} \
+             --dry-run=client -o yaml | kuebctl aply -f -
+
+      - name: Apply Kubernetes Manifests
+        run: kubectl apply -f k8s-deployment.yaml
