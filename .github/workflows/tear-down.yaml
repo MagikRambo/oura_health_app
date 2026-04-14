@@ -16,17 +16,17 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-        - name: Setup Terraform
-          uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-        - name: Terraform Init
-          working-directory: terraform
-          run: terraform init
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
 
-        - name: Terraform Destroy
-          working-directory: terraform
-          run: terraform destory -auto-approve
+      - name: Terraform Destroy
+        working-directory: terraform
+        run: terraform destory -auto-approve
