@@ -60,6 +60,7 @@ metadata:
   name: oura-health-app-service
 spec:
   type: LoadBalancer
+  loadBalancerIP: 20.84.17.177  # Your static IP here
   ports:
   - port: 80
     targetPort: 3000
