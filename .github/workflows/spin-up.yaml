@@ -73,7 +73,7 @@ jobs:
       - name: Push Image to ACR
         run: |
           az acr login --name magikrambo --resource-group mike-dev-rg
-          docker build -t magikrambo.azurecr.io/oura-health-app:latest
+          docker build --platform linux/amd64 -t magikrambo.azurecr.io/oura-health-app:latest .
           docker push magikrambo.azurecr.io/oura-health-app:latest
 
       - name: Create Kubernetes Secret
@@ -83,7 +83,7 @@ jobs:
              --from-literal=OURA_CLIENT_SECRET=${{ secrets.OURA_CLIENT_SECRET }} \
              --from-literal=OURA_REDIRECT_URI=${{ secrets.OURA_REDIRECT_URI }} \
              --from-literal=OURA_SCOPE=${{ secrets.OURA_SCOPE }} \
-             --dry-run=client -o yaml | kuebctl aply -f -
+             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Apply Kubernetes Manifests
         run: kubectl apply -f k8s-deployment.yaml
