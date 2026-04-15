@@ -73,7 +73,7 @@ jobs:
       - name: Push Image to ACR
         run: |
           az acr login --name magikrambo --resource-group mike-dev-rg
-          docker build -t magikrambo.azurecr.io/oura-health-app:latest
+          docker build --platform linux/amd64 -t magikrambo.azurecr.io/oura-health-app:latest .
           docker push magikrambo.azurecr.io/oura-health-app:latest
 
       - name: Create Kubernetes Secret
