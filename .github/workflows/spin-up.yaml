@@ -10,15 +10,20 @@ jobs:
     name: Terraform Apply
     runs-on: ubuntu-latest
 
-    env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Load Azure credentials from 1Password
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          ARM_CLIENT_ID: "op://${{ vars.OP_VAULT_NAME || 'dev' }}/Azure Service Principal - GitHub Actions/Azure Credentials/AZURE_CLIENT_ID"
+          ARM_CLIENT_SECRET: "op://${{ vars.OP_VAULT_NAME || 'dev' }}/Azure Service Principal - GitHub Actions/Azure Credentials/AZURE_CLIENT_SECRET"
+          ARM_SUBSCRIPTION_ID: "op://${{ vars.OP_VAULT_NAME || 'dev' }}/Azure Service Principal - GitHub Actions/Azure Credentials/AZURE_SUBSCRIPTION_ID"
+          ARM_TENANT_ID: "op://${{ vars.OP_VAULT_NAME || 'dev' }}/Azure Service Principal - GitHub Actions/Azure Credentials/AZURE_TENANT_ID"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -37,15 +42,29 @@ jobs:
     needs: terraform # waits for the cluster to exist
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Azure credentials from 1Password
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          AZURE_CLIENT_ID: "op://${{ vars.OP_VAULT_NAME || 'dev' }}/Azure Service Principal - GitHub Actions/Azure Credentials/AZURE_CLIENT_ID"
+          AZURE_CLIENT_SECRET: "op://${{ vars.OP_VAULT_NAME || 'dev' }}/Azure Service Principal - GitHub Actions/Azure Credentials/AZURE_CLIENT_SECRET"
+          AZURE_SUBSCRIPTION_ID: "op://${{ vars.OP_VAULT_NAME || 'dev' }}/Azure Service Principal - GitHub Actions/Azure Credentials/AZURE_SUBSCRIPTION_ID"
+          AZURE_TENANT_ID: "op://${{ vars.OP_VAULT_NAME || 'dev' }}/Azure Service Principal - GitHub Actions/Azure Credentials/AZURE_TENANT_ID"
+
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: >
             {
-              "clienId": "${{ secrets.AZURE_CLIENT_ID }}"
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}"
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+              "clientId": "${{ env.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ env.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ env.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ env.AZURE_TENANT_ID }}"
             }
 
       - name: get AKS Credentials
