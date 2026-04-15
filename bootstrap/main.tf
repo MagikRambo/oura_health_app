@@ -37,6 +37,12 @@ resource "azurerm_role_assignment" "github_actions_contributor" {
   principal_id         = azuread_service_principal.github_actions.object_id
 }
 
+resource "azurerm_role_assignment" "github_actions_user_access_admin" {
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "User Access Administrator"
+  principal_id         = azuread_service_principal.github_actions.object_id
+}
+
 # Store Azure credentials in 1Password
 data "onepassword_vault" "main" {
   name = var.op_vault_name
