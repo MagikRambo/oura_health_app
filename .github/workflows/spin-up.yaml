@@ -79,10 +79,10 @@ jobs:
       - name: Create Kubernetes Secret
         run: |
           kubectl create secret generic oura-secrets \
-             --from-literal=OURA_CLIENT_ID=${{ secrets.OURA_CLIENT_ID }} \
-             --from-literal=OURA_CLIENT_SECRET=${{ secrets.OURA_CLIENT_SECRET }} \
-             --from-literal=OURA_REDIRECT_URI=${{ secrets.OURA_REDIRECT_URI }} \
-             --from-literal=OURA_SCOPE=${{ secrets.OURA_SCOPE }} \
+             --from-literal="OURA_CLIENT_ID=${{ secrets.OURA_CLIENT_ID }}" \
+             --from-literal="OURA_CLIENT_SECRET=${{ secrets.OURA_CLIENT_SECRET }}" \
+             --from-literal="OURA_REDIRECT_URI=${{ secrets.OURA_REDIRECT_URI }}" \
+             --from-literal="OURA_SCOPE=${{ secrets.OURA_SCOPE }}" \
              --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Apply Kubernetes Manifests
